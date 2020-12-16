@@ -1,5 +1,6 @@
 package com.example.textquest;
 
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -9,9 +10,14 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.BufferedWriter;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+
 public class Game extends AppCompatActivity {
 
-    public static Player player = new Player("mrkiriss");
+    public static Player player = new Player();
     public static Story story = new Story();
 
     @Override
@@ -20,7 +26,7 @@ public class Game extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         // загрузка картинок в кнопки
-        Button b= (Button) findViewById(R.id.button_mood);
+        Button b= findViewById(R.id.button_mood);
         b.setBackground(getDrawable(R.drawable.mood));
 
         b= (Button) findViewById(R.id.button_money);
@@ -39,6 +45,10 @@ public class Game extends AppCompatActivity {
         p = (ProgressBar) findViewById(R.id.progress_mood);
         p.setProgress(player.mood);
 
+//        TextView t =(TextView) findViewById(R.id.text_story);
+//        t.setBackground(getDrawable(R.drawable.up));
+
+        Player.name="mrkiriss";
         refreshScreen();
     }
 
@@ -63,19 +73,6 @@ public class Game extends AppCompatActivity {
             Toast.makeText(this,"Game Over. You "+gameCondition,Toast.LENGTH_SHORT).show();
         }
     }
-
-    // изменить цвет фона progressbar при спец. ситуациях
-    void setSpecialColor(ProgressBar p, int id){
-        if (p.getProgress()<1){
-            Button b = (Button) findViewById(id);
-            b.setBackgroundColor(getColor(R.color.lose));;
-        }
-        if (p.getProgress()>99){
-            Button b = (Button) findViewById(id);
-            b.setBackgroundColor(getColor(R.color.win));;
-        }
-    }
-
     // обновляет компоненты экрана: состояние характеристик, историю, картинку, превью кнопок
     public void refreshScreen(){
         ProgressBar p = (ProgressBar) findViewById(R.id.progress_knowledge);
@@ -95,15 +92,19 @@ public class Game extends AppCompatActivity {
 
         TextView t= (TextView) findViewById(R.id.text_story);
         t.setText(story.currentSituation.text);
+
+        t= (TextView) findViewById(R.id.text_login);
+        t.setText("Login: "+Player.name);
     }
 
     // перезапускает игру
     public void resetGame(View view){
-        player = new Player("mrkiriss");
+        player = new Player();
         story = new Story();
         refreshScreen();
         changeEnable(true);
     }
+
     // меняет состояние кнопок смены ситуации на заданное
     void changeEnable(boolean bl){
         Button b= (Button) findViewById(R.id.buttonRightEvent);
@@ -112,17 +113,34 @@ public class Game extends AppCompatActivity {
         b= (Button) findViewById(R.id.buttonLeftEvent);
         b.setEnabled(bl);
     }
+
+    // вызывает Activity запроса логина нового пользователя
+    public void startLogin(View v){
+        Intent i = new Intent(this,Login.class);
+        startActivityForResult(i,0);
+    }
+
+    // получение результата ввода логина
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode==0){
+            Toast.makeText(this,"Логин не был получен",Toast.LENGTH_SHORT).show();
+        }else{
+            Player.name = data.getStringExtra("login");
+            Toast.makeText(this,"Логин успешно изменён",Toast.LENGTH_SHORT).show();
+            refreshScreen();
+        }
+    }
 }
 
 class Player{
     public int mood, money, knowledge;
-    public String name;
+    public static String name;
 
-    Player(String name){
+    Player(){
         this.mood=50;
         this.money=50;
         this.knowledge=50;
-        this.name=name;
     }
 
     void changeValues(int dMood, int dMoney, int dKnowledge){
@@ -151,6 +169,7 @@ class Situation{
 class Story{
     public Situation currentSituation;
     Situation firstSituation;
+    //public String way;
     Story(){
         // начальная ситуация
         firstSituation= new Situation(
@@ -174,8 +193,8 @@ class Story{
         firstSituation.directions[1]=new Situation(
                 "Согласиться на прогулку",
                 "Отказаться и вернуться спать",
-                "После водных процедур вы полностью просыпаетесь и чувствуете себя прекрасно"
-                        + "Идя в свою комнату, вы сталкиваетесь с соседом, который предлогает вам прогуляться",
+                "После водных процедур вы полностью просыпаетесь и чувствуете себя прекрасно."
+                        + "Идя в свою комнату, вы сталкиваетесь с соседом, который предлогает вам прогуляться.",
                 2,+25,0,+0
         );
         // возможные ситуации после второго выбора
@@ -183,27 +202,27 @@ class Story{
                 "---",
                 "---",
                 "Постепенно вы осознаёте, что ничего не знаете.\n"
-                        + "Вы впадаете в отчаяние, а ваша история подходит к концу",
+                        + "Вы впадаете в отчаяние, а ваша история подходит к концу.",
                 0,-99,-99,-99
         );
         firstSituation.directions[0].directions[1]=new Situation(
                 "---",
                 "---",
                 "Вы играете, играете, а потом ещё играете.\n"
-                        + "Случайно вы выиграваете парочку турниров, обеспечивая тем самым себе и своим детям, внукам и правнукам безбудную жизнь",
+                        + "Случайно вы выиграваете парочку турниров, обеспечивая тем самым себе и своим детям, внукам и правнукам безбудную жизнь.",
                 0,+100,+100,-49
         );
         firstSituation.directions[1].directions[0]=new Situation(
                 "---",
                 "---",
                 "В время своей прогуки вы встречаете загадочного мужчину, который за нескромную плату отдаёт вам ответы на грядущую сессию.\n"
-                        + "Вы сливаете эти ответы своим одногруппникам и всю зиму отмечаете успешную здачу сессии",
+                        + "Вы сливаете эти ответы своим одногруппникам и всю зиму отмечаете успешную здачу сессии.",
                 0,+100,-49,-49
         );
         firstSituation.directions[1].directions[1]=new Situation(
                 "---",
                 "---",
-                "Проспас целый день, вы обрекаете себя на хорошее настроение.\n"
+                "Проспав целый день, вы обрекаете себя на хорошее настроение.\n"
                         + "Однако ваш сосед находит на тумбочке красный пистолет, которым и будит вас.\n"
                         + " Ваше настроение стремительно падает, а рутинный день только начинается...",
                 0,-99,0,0
@@ -219,6 +238,7 @@ class Story{
     }
     // продвигает вперёд по истории в соответствии с кодом выбранной ситуации
     public void changeSituation(int id){
+        //way+=String.valueOf(id);
         currentSituation=currentSituation.directions[id];
     }
 }

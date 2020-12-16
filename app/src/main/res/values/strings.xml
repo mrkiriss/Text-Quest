@@ -1,4 +1,8 @@
 <resources>
     <string name="app_name">Text Quest</string>
     <string name="reset">Перезапустить игру</string>
+    <string name="log">Сменить игрока</string>
+    <string name="plz">Введите логин нового игрока</string>
+    <string name="change">Подтвердить изменения</string>
+    <string name="back">Назад</string>
 </resources>
