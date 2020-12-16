@@ -1,4 +1,4 @@
 <resources>
     <string name="app_name">Text Quest</string>
-    <string name="go">Перейти к следующей сцене</string>
+    <string name="reset">Перезапустить игру</string>
 </resources>
